@@ -1,0 +1,159 @@
+body {
+    background-color: #000000;
+    /* Matches banner dominant color */
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header {
+    width: 100%;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.banner {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+}
+
+.input-section {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    margin-bottom: 30px;
+    width: 100%;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+#questionInput {
+    width: 800px;
+    height: 300px;
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background-color: #1a1a1a;
+    color: #fff;
+    resize: none;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+#questionInput:focus {
+    outline: none;
+    border-color: #555;
+}
+
+.buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: space-between;
+    height: 300px;
+    /* Match input height */
+}
+
+.unit-label {
+    text-align: center;
+    font-weight: bold;
+    color: #aaa;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: -5px;
+    /* Pull buttons slightly closer */
+}
+
+.level-btn {
+    flex: 1;
+    width: 120px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.level-btn:hover {
+    background-color: #555;
+}
+
+.level-btn:active {
+    transform: scale(0.98);
+}
+
+.level-btn.selected {
+    background-color: #4CAF50;
+    /* Green to indicate selection */
+    border-color: #45a049;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.submit-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.submit-btn {
+    width: 800px;
+    /* Match input width */
+    padding: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #444;
+    color: white;
+    border: 2px solid #555;
+    border-radius: 8px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.submit-btn:hover {
+    background-color: #666;
+    border-color: #777;
+}
+
+.submit-btn:active {
+    transform: scale(0.98);
+}
+
+.output-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.output-box {
+    width: 940px;
+    /* 800 + 20 gap + 120 btn width approx */
+    min-height: 200px;
+    padding: 20px;
+    background-color: #111;
+    border: 1px solid #333;
+    border-radius: 10px;
+    font-size: 18px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}

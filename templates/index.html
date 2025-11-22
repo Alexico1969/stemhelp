@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEM Help</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <img src="{{ url_for('static', filename='img/banner.jpg') }}" alt="Banner" class="banner">
+        </header>
+
+        <main>
+            <div class="input-section">
+                <textarea id="questionInput" placeholder="Type your question here..."></textarea>
+                <div class="buttons-container">
+                    <div class="unit-label">Unit</div>
+                    <button class="level-btn" data-level="1">1</button>
+                    <button class="level-btn" data-level="2">2</button>
+                    <button class="level-btn" data-level="3">3</button>
+                    <button class="level-btn" data-level="4">4</button>
+                    <button class="level-btn" data-level="Other">Other</button>
+                </div>
+            </div>
+
+            <div class="submit-section">
+                <button id="submitBtn" class="submit-btn">Submit for Coaching</button>
+            </div>
+
+            <div class="output-section">
+                <div id="answerOutput" class="output-box">Answer will appear here...</div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const buttons = document.querySelectorAll('.level-btn');
+        const submitBtn = document.getElementById('submitBtn');
+        const input = document.getElementById('questionInput');
+        const output = document.getElementById('answerOutput');
+        let selectedLevel = null;
+
+        async function sendRequest(level) {
+            const question = input.value;
+
+            if (!question.trim()) {
+                alert('Please enter a question first.');
+                return;
+            }
+
+            output.innerText = "Thinking...";
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question, level, unit: selectedLevel })
+                });
+
+                const data = await response.json();
+
+                if (data.debug_info) {
+                    console.log("%c--- OpenAI Request ---", "font-weight: bold; color: #4CAF50;");
+                    console.log("%cSystem Prompt:", "font-weight: bold;", data.debug_info.system_prompt);
+                    console.log("%cUser Prompt:", "font-weight: bold;", data.debug_info.user_prompt);
+                }
+
+                if (data.error) {
+                    output.innerText = "Error: " + data.error;
+                } else {
+                    output.innerText = data.answer;
+                }
+            } catch (error) {
+                output.innerText = "Error: " + error.message;
+            }
+        }
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update selection state
+                buttons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedLevel = btn.getAttribute('data-level');
+
+                // Send request for this level
+                sendRequest(selectedLevel);
+            });
+        });
+
+        submitBtn.addEventListener('click', () => {
+            if (!selectedLevel) {
+                alert('Please select a Unit (1, 2, 3, 4, or Other) first.');
+                return;
+            }
+            sendRequest('Coach');
+        });
+    </script>
+</body>
+
+</html>
