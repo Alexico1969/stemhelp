@@ -5,8 +5,7 @@ A Flask-based web application designed to act as a Computer Science coach for st
 ## Features
 
 -   **Level-Based Assistance**: Tailors responses for different education levels:
-    -   Grade 1
-    -   Grade 5
+    -   Grade 9
     -   High School
     -   College/Expert
 -   **Unit-Specific Constraints**: Enforces knowledge constraints based on the selected curriculum unit (1-4) to ensure students aren't given solutions using concepts they haven't learned yet.
