@@ -26,20 +26,8 @@ def ask():
         return jsonify({'error': 'OpenAI API key not configured'}), 500
 
     # Determine base system prompt
-    system_prompt = "You are a helpful assistant."
-    if level == '1':
-        system_prompt = "You are a helpful assistant for a 1st grade student. Use simple words and short sentences."
-    elif level == '2':
-        system_prompt = "You are a helpful assistant for a 5th grade student. Explain things clearly but without being too childish."
-    elif level == '3':
-        system_prompt = "You are a helpful assistant for a high school student. Be detailed and academic."
-    elif level == '4':
-        system_prompt = "You are a helpful assistant for a college student or expert. Provide in-depth, technical explanations."
-    elif level == 'Other':
-        system_prompt = "You are a helpful assistant. Adapt to the user's tone."
-    elif level == 'Coach':
-        system_prompt = "You are a Computer Science coach for High School Freshmen. You MUST NOT give the student the full solution or write the code for them. Instead, provide a single, subtle hint or a conceptual pointer to help them figure it out themselves. If they ask for code, refuse and explain the concept instead. Your goal is to guide them, not do the work for them."
-        question = "Right now the student is struggling with this: " + question
+    system_prompt = "You are a Computer Science coach for High School Freshmen. You MUST NOT give the student the full solution or write the code for them. Instead, provide a single, subtle hint or a conceptual pointer to help them figure it out themselves. If they ask for code, refuse and explain the concept instead. Your goal is to guide them, not do the work for them."
+    question = "Right now the student is struggling with this: " + question
 
     # Apply Unit-specific constraints
     constraints = ""
@@ -58,17 +46,37 @@ def ask():
     # Add formatting instruction
     system_prompt += "\nTry to answer with numbered steps that students can follow step-by-step to complete the assignment."
 
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": question}
+    ]
+
+    retry_occurred = False
+    max_retries = 3
+    
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": question}
-            ]
-        )
-        answer = response.choices[0].message.content
+        for attempt in range(max_retries):
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages
+            )
+            answer = response.choices[0].message.content
+
+            # Check for code blocks
+            if "```" in answer:
+                retry_occurred = True
+                # Add the assistant's bad response and a correction instruction to history
+                messages.append({"role": "assistant", "content": answer})
+                messages.append({"role": "user", "content": "You provided code. Please provide a hint WITHOUT code."})
+                # Loop continues to next attempt
+            else:
+                # No code found, break and return
+                break
+        
+        # If loop finishes, we return the last answer (whether it has code or not, to avoid infinite loops)
         return jsonify({
             'answer': answer,
+            'retry_occurred': retry_occurred,
             'debug_info': {
                 'system_prompt': system_prompt,
                 'user_prompt': question

@@ -74,7 +74,14 @@
                 if (data.error) {
                     output.innerText = "Error: " + data.error;
                 } else {
-                    output.innerText = data.answer;
+                    let answerText = data.answer;
+                    if (data.retry_occurred) {
+                        const notification = "Note: The AI attempted to provide code, but was intercepted and asked to provide a hint instead.\n\n";
+                        output.innerHTML = `<span style="color: red; font-size: 1.2em; font-weight: bold;">${notification}</span>` +
+                            answerText.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+                    } else {
+                        output.innerText = answerText;
+                    }
                 }
             } catch (error) {
                 output.innerText = "Error: " + error.message;
