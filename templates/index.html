@@ -14,100 +14,57 @@
             <img src="{{ url_for('static', filename='img/banner.jpg') }}" alt="Banner" class="banner">
         </header>
 
-        <main>
-            <div class="input-section">
-                <textarea id="questionInput" placeholder="Type your question here..."></textarea>
-                <div class="buttons-container">
-                    <div class="unit-label">Unit</div>
-                    <button class="level-btn" data-level="1">1</button>
-                    <button class="level-btn" data-level="2">2</button>
-                    <button class="level-btn" data-level="3">3</button>
-                    <button class="level-btn" data-level="4">4</button>
-                    <button class="level-btn" data-level="Other">Other</button>
+        <main class="flow-main">
+            <section class="flow-card">
+                <h1>Start Your Help Session</h1>
+                <p class="flow-subtitle">So.. what Unit are you working in?</p>
+                <div class="choice-grid" id="chapterGrid">
+                    <button class="choice-btn" data-unit="1">Unit 1</button>
+                    <button class="choice-btn" data-unit="2">Unit 2</button>
+                    <button class="choice-btn" data-unit="3">Unit 3</button>
+                    <button class="choice-btn" data-unit="4">Unit 4</button>
                 </div>
-            </div>
+            </section>
 
-            <div class="submit-section">
-                <button id="submitBtn" class="submit-btn">Submit for Coaching</button>
-            </div>
-
-            <div class="output-section">
-                <div id="answerOutput" class="output-box">Answer will appear here...</div>
-            </div>
+            <section class="flow-card" id="helpTypeSection" hidden>
+                <p class="flow-subtitle">Step 2: Choose what kind of help you want.</p>
+                <div class="choice-grid">
+                    <button class="choice-btn help-btn" data-mode="breakdown">Break down the assignment</button>
+                    <button class="choice-btn help-btn" data-mode="check-errors">Check my code for errors</button>
+                </div>
+            </section>
         </main>
     </div>
 
     <script>
-        const buttons = document.querySelectorAll('.level-btn');
-        const submitBtn = document.getElementById('submitBtn');
-        const input = document.getElementById('questionInput');
-        const output = document.getElementById('answerOutput');
-        let selectedLevel = null;
+        const chapterButtons = document.querySelectorAll('[data-unit]');
+        const helpButtons = document.querySelectorAll('.help-btn');
+        const helpTypeSection = document.getElementById('helpTypeSection');
 
-        async function sendRequest(level) {
-            const question = input.value;
+        let selectedUnit = null;
 
-            if (!question.trim()) {
-                alert('Please enter a question first.');
-                return;
-            }
-
-            output.innerText = "Thinking...";
-
-            try {
-                const response = await fetch('/ask', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ question, level, unit: selectedLevel })
-                });
-
-                const data = await response.json();
-
-                if (data.debug_info) {
-                    console.log("%c--- OpenAI Request ---", "font-weight: bold; color: #4CAF50;");
-                    console.log("%cSystem Prompt:", "font-weight: bold;", data.debug_info.system_prompt);
-                    console.log("%cUser Prompt:", "font-weight: bold;", data.debug_info.user_prompt);
-                }
-
-                if (data.error) {
-                    output.innerText = "Error: " + data.error;
-                } else {
-                    let answerText = data.answer;
-                    if (data.retry_occurred) {
-                        const notification = "Note: The AI attempted to provide code, but was intercepted and asked to provide a hint instead.\n\n";
-                        output.innerHTML = `<span style="color: red; font-size: 1.2em; font-weight: bold;">${notification}</span>` +
-                            answerText.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-                    } else {
-                        output.innerText = answerText;
-                    }
-                }
-            } catch (error) {
-                output.innerText = "Error: " + error.message;
-            }
-        }
-
-        buttons.forEach(btn => {
+        chapterButtons.forEach((btn) => {
             btn.addEventListener('click', () => {
-                // Update selection state
-                buttons.forEach(b => b.classList.remove('selected'));
+                selectedUnit = btn.getAttribute('data-unit');
+                chapterButtons.forEach((b) => b.classList.remove('selected'));
                 btn.classList.add('selected');
-                selectedLevel = btn.getAttribute('data-level');
-
-                // Send request for this level
-                sendRequest(selectedLevel);
+                helpTypeSection.hidden = false;
             });
         });
 
-        submitBtn.addEventListener('click', () => {
-            if (!selectedLevel) {
-                alert('Please select a Unit (1, 2, 3, 4, or Other) first.');
-                return;
-            }
-            sendRequest('Coach');
+        helpButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (!selectedUnit) {
+                    alert('Please choose a Unit first.');
+                    return;
+                }
+
+                const selectedMode = btn.getAttribute('data-mode');
+                window.location.href = `/help/${selectedMode}?unit=${encodeURIComponent(selectedUnit)}`;
+            });
         });
     </script>
 </body>
 
 </html>
+

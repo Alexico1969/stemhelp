@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEM Help</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <img src="{{ url_for('static', filename='img/banner.jpg') }}" alt="Banner" class="banner">
+        </header>
+
+        <main class="flow-main">
+            <section class="flow-card">
+                <h1>{{ mode_title }}</h1>
+                <p class="flow-subtitle">Unit {{ unit }} selected.</p>
+                <div id="defaultInputGroup">
+                    <textarea id="questionInput" class="wide-input" placeholder="Describe your assignment or paste your code here..."></textarea>
+                </div>
+                <div id="checkErrorsInputGroup" hidden>
+                    <textarea id="assignmentInput" class="wide-input compact-input" placeholder="Paste the assignment prompt here..."></textarea>
+                    <textarea id="codeInput" class="wide-input compact-input" placeholder="Paste your current code (with errors) here..."></textarea>
+                </div>
+                <button id="submitBtn" class="submit-btn">Get Help</button>
+                <div id="stepsOutput" class="output-box">Steps will appear here...</div>
+                <div id="firstLineOutput" class="output-box compact-output" hidden>First line will appear here...</div>
+
+                <div class="action-row">
+                    <a href="/" class="action-link">Start over</a>
+                    <button id="firstLineBtn" type="button" class="action-link" hidden>Give me the first line</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const firstLineBtn = document.getElementById('firstLineBtn');
+        const input = document.getElementById('questionInput');
+        const defaultInputGroup = document.getElementById('defaultInputGroup');
+        const checkErrorsInputGroup = document.getElementById('checkErrorsInputGroup');
+        const assignmentInput = document.getElementById('assignmentInput');
+        const codeInput = document.getElementById('codeInput');
+        const stepsOutput = document.getElementById('stepsOutput');
+        const firstLineOutput = document.getElementById('firstLineOutput');
+        const unit = "{{ unit }}";
+        const helpMode = "{{ mode }}";
+        let lastBreakdownFirstStep = '';
+
+        function extractFirstBreakdownStep(text) {
+            if (!text) return '';
+            const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
+            for (const line of lines) {
+                const cleaned = line.replace(/^\d+[\).\-\s]*/, '').trim();
+                if (cleaned) return cleaned;
+            }
+            return '';
+        }
+
+        async function requestHelp(mode) {
+            let question = '';
+            let assignmentText = '';
+            let codeText = '';
+
+            if (mode === 'check-errors') {
+                assignmentText = assignmentInput.value.trim();
+                codeText = codeInput.value.trim();
+
+                if (!assignmentText) {
+                    alert('Please paste the assignment first.');
+                    return;
+                }
+                if (!codeText) {
+                    alert('Please paste your current code first.');
+                    return;
+                }
+
+                question = `Assignment:\n${assignmentText}\n\nStudent code:\n${codeText}`;
+            } else {
+                question = input.value.trim();
+                if (!question) {
+                    alert('Please enter your assignment details or code first.');
+                    return;
+                }
+            }
+
+            if (mode === 'first-line') {
+                firstLineOutput.hidden = false;
+                firstLineOutput.innerText = 'Thinking...';
+            } else {
+                stepsOutput.innerText = 'Thinking...';
+            }
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question,
+                        unit,
+                        help_mode: mode,
+                        first_step: mode === 'first-line' ? lastBreakdownFirstStep : '',
+                        assignment_text: assignmentText,
+                        code_text: codeText
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.debug_info) {
+                    console.log('%c--- OpenAI Request ---', 'font-weight: bold; color: #4CAF50;');
+                    console.log('%cSystem Prompt:', 'font-weight: bold;', data.debug_info.system_prompt);
+                    console.log('%cUser Prompt:', 'font-weight: bold;', data.debug_info.user_prompt);
+                    console.log('%cUnit:', 'font-weight: bold;', data.debug_info.unit);
+                    console.log('%cHelp Mode:', 'font-weight: bold;', data.debug_info.help_mode);
+                }
+
+                if (data.error) {
+                    if (mode === 'first-line') {
+                        firstLineOutput.hidden = false;
+                        firstLineOutput.innerText = 'Error: ' + data.error;
+                    } else {
+                        stepsOutput.innerText = 'Error: ' + data.error;
+                    }
+                    return;
+                }
+
+                if (mode === 'first-line') {
+                    firstLineOutput.hidden = false;
+                    firstLineOutput.innerText = data.answer;
+                } else {
+                    stepsOutput.innerText = data.answer;
+                }
+
+                if (helpMode === 'breakdown' && mode === 'breakdown') {
+                    lastBreakdownFirstStep = extractFirstBreakdownStep(data.answer);
+                    firstLineBtn.hidden = false;
+                    firstLineOutput.hidden = true;
+                    firstLineOutput.innerText = 'First line will appear here...';
+                }
+            } catch (error) {
+                if (mode === 'first-line') {
+                    firstLineOutput.hidden = false;
+                    firstLineOutput.innerText = 'Error: ' + error.message;
+                } else {
+                    stepsOutput.innerText = 'Error: ' + error.message;
+                }
+            }
+        }
+
+        submitBtn.addEventListener('click', () => requestHelp(helpMode));
+        firstLineBtn.addEventListener('click', () => requestHelp('first-line'));
+
+        if (helpMode === 'check-errors') {
+            defaultInputGroup.hidden = true;
+            checkErrorsInputGroup.hidden = false;
+            firstLineBtn.hidden = true;
+            stepsOutput.innerText = 'Feedback will appear here...';
+        }
+    </script>
+</body>
+
+</html>
