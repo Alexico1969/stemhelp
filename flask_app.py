@@ -347,7 +347,7 @@ def ask():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-5-mini",
             messages=messages
         )
         answer = response.choices[0].message.content or ""
